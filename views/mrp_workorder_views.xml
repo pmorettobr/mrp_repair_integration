@@ -18,11 +18,6 @@
                     <field name="operator_end_date" readonly="1"/>
                 </group>
 
-                <group string="Controle de Qualidade" name="qc_group" col="4">
-                    <field name="quality_approval_state" widget="badge"/>
-                    <field name="quality_notes" placeholder="Observações do QC..." colspan="4"/>
-                </group>
-
             </xpath>
 
         </field>
