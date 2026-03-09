@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    
+    <!-- Formulário do Wizard -->
+    <record id="view_repair_create_production_wizard_form" model="ir.ui.view">
+        <field name="name">repair.create.production.wizard.form</field>
+        <field name="model">repair.create.production.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Criar Ordem de Produção">
+                <sheet>
+                    <div class="alert alert-info" role="alert" style="margin-bottom: 16px;">
+                        <i class="fa fa-info-circle"/> 
+                        <strong>Dica:</strong> Preencha os dados abaixo para criar uma nova Ordem de Produção 
+                        vinculada ao reparo <strong><field name="repair_id" class="oe_inline"/></strong>.
+                    </div>
+                    
+                    <group>
+                        <group string="📦 Produto">
+                            <field name="product_id" options="{'no_create': True, 'no_open': False}"/>
+                            <field name="product_qty"/>
+                            <field name="product_uom_id" groups="uom.group_uom"/>
+                        </group>
+                        <group string="📋 Planejamento">
+                            <field name="bom_id" options="{'no_create': True, 'no_open': True}" 
+                                   placeholder="Deixe em branco para usar a BOM padrão"/>
+                            <field name="date_deadline" widget="date"/>
+                        </group>
+                    </group>
+                    
+                    <group string="📍 Logística" colspan="4">
+                        <field name="location_src_id" options="{'no_create': True}" 
+                               placeholder="Almoxarifado de origem dos componentes"/>
+                        <field name="location_dest_id" options="{'no_create': True}" 
+                               placeholder="Almoxarifado de destino do produto"/>
+                    </group>
+                    
+                    <group string="📝 Observações" colspan="4">
+                        <field name="note" placeholder="Informações adicionais para a equipe de produção..." nolabel="1"/>
+                    </group>
+                </sheet>
+                
+                <footer>
+                    <button name="action_create_production" 
+                            type="object" 
+                            string="✅ Criar Produção" 
+                            class="btn-primary"
+                            icon="fa-check"/>
+                    <button name="action_cancel" 
+                            type="object" 
+                            string="❌ Cancelar" 
+                            class="btn-secondary"
+                            icon="fa-times"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Ação do Wizard (para ser chamada via código) -->
+    <record id="action_repair_create_production_wizard" model="ir.actions.act_window">
+        <field name="name">Criar Ordem de Produção</field>
+        <field name="res_model">repair.create.production.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="binding_model_id" ref="repair.model_repair_order"/>
+        <field name="binding_view_types">form</field>
+        <field name="context">{'default_repair_id': active_id}</field>
+    </record>
+
+</odoo>
