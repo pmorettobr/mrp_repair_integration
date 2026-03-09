@@ -1,48 +1,133 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <record id="view_repair_order_form_inherit" model="ir.ui.view">
-        <field name="name">repair.order.form.inherit.qc</field>
+    
+    <!-- Tree View com Badges Coloridos -->
+    <record id="view_repair_order_tree_integration" model="ir.ui.view">
+        <field name="name">repair.order.tree.integration</field>
+        <field name="model">repair.order</field>
+        <field name="inherit_id" ref="repair.view_repair_order_tree"/>
+        <field name="arch" type="xml">
+            <field name="state" position="attributes">
+                <attribute name="widget">badge</attribute>
+                <attribute name="decoration-info">state=='draft'</attribute>
+                <attribute name="decoration-primary">state=='confirmed'</attribute>
+                <attribute name="decoration-warning">state=='under_repair'</attribute>
+                <attribute name="decoration-success">state=='done'</attribute>
+                <attribute name="decoration-danger">state=='cancel'</attribute>
+            </field>
+            
+            <!-- Adiciona coluna de MOs vinculadas -->
+            <field name="product_id" position="after">
+                <field name="production_count" 
+                       string="MOs" 
+                       widget="badge" 
+                       decoration-info="production_count > 0"
+                       optional="show"/>
+            </field>
+        </field>
+    </record>
+
+    <!-- Form View - UX Otimizada -->
+    <record id="view_repair_order_form_integration" model="ir.ui.view">
+        <field name="name">repair.order.form.integration</field>
         <field name="model">repair.order</field>
         <field name="inherit_id" ref="repair.view_repair_order_form"/>
         <field name="arch" type="xml">
-
-            <!-- ✅ company_id no mesmo grupo que product_id (para domínio) -->
-            <xpath expr="//field[@name='product_id']/.." position="inside">
-                <field name="company_id" invisible="1"/>
-            </xpath>
-
-            <!-- ✅ Smart Button: Ver Ordens de Produção vinculadas -->
+            
+            <!-- === BUTTON BOX: Smart Buttons === -->
             <xpath expr="//div[@name='button_box']" position="inside">
                 <button name="action_view_productions"
                         type="object"
                         class="oe_stat_button"
-                        icon="fa-cogs"
-                        attrs="{'invisible': [('production_count', '=', 0)]}"
-                        help="Ver Ordens de Produção vinculadas a este reparo">
-                    <div class="o_stat_info">
-                        <field name="production_count" class="o_stat_value"/>
-                        <span class="o_stat_text">OPs</span>
-                    </div>
+                        icon="fa-industry"
+                        help="🔗 Ver Ordens de Produção vinculadas a este reparo">
+                    <field name="production_count" widget="statinfo" string="Produções"/>
                 </button>
-            </xpath>           
+            </xpath>
 
-                <!-- Grupo de Ordens de Produção Vinculadas -->
-                <group string="Ordens de Produção Vinculadas" name="production_link_group" colspan="4">
-                    <field name="production_ids" nolabel="1" colspan="4">
-                        <tree create="0" delete="0">
-                            <field name="name"/>
-                            <field name="product_id"/>
-                            <field name="product_qty"/>
-                            <field name="state" widget="badge"
-                                   decoration-info="state=='draft'"
-                                   decoration-success="state=='done'"
-                                   decoration-warning="state=='confirmed'"/>
-                            <field name="date_deadline"/>
-                        </tree>
-                    </field>
+            <!-- === HEADER: Botões de Ação Rápida === -->
+            <xpath expr="//header" position="inside">
+                <button name="action_open_create_production_wizard"
+                        type="object"
+                        string="➕ Criar MO"
+                        class="btn-secondary"
+                        icon="fa-plus"
+                        attrs="{'invisible': [('state', 'in', ['done', 'cancel'])]}"
+                        help="Cria nova Ordem de Produção vinculada a este reparo"/>
+                
+                <button name="action_create_production_quick"
+                        type="object"
+                        string="⚡ Criar MO Rápido"
+                        class="btn-link text-muted"
+                        attrs="{'invisible': [('state', 'in', ['done', 'cancel'])]}"
+                        help="Cria MO com dados padrão (para usuários avançados)"/>
+            </xpath>
+
+            <!-- === SHEET: Grupo de Integração MRP === -->
+            <xpath expr="//notebook" position="before">
+                <group string="🔗 Integração MRP" name="mrp_integration_group" col="4">
+                    <field name="production_ids" nolabel="1" colspan="4" 
+                           widget="many2many_tags"
+                           options="{'no_create': True, 'no_open': True}"
+                           placeholder="Nenhuma produção vinculada ainda. Clique em 'Criar MO' para iniciar."/>
                 </group>
+            </xpath>
+
+            <!-- === SHEET: Grupo de Operador === -->
+            <xpath expr="//group[@name='repair_order_group']" position="after">
+                <group string="👤 Técnico Responsável" name="operator_group" col="2">
+                    <field name="operator_id" 
+                           options="{'no_create': True, 'no_open': False}"
+                           help="Funcionário responsável pela execução. Será replicado para as work orders."/>
+                </group>
+            </xpath>
+
+            <!-- === NOTEBOOK: Aba de Integração === -->
+            <xpath expr="//notebook/page[@name='extra_info']" position="after">
+                <page string="🔗 Integração" name="integration_tab" attrs="{'invisible': [('production_count', '=', 0)]}">
+                    <group>
+                        <group string="Ordens de Produção">
+                            <field name="production_ids" nolabel="1" mode="tree,form" 
+                                   context="{'form_view_ref': 'mrp.mrp_production_form_view'}">
+                                <tree>
+                                    <field name="name"/>
+                                    <field name="product_id"/>
+                                    <field name="product_qty"/>
+                                    <field name="state" widget="badge"
+                                           decoration-info="state=='draft'"
+                                           decoration-primary="state=='confirmed'"
+                                           decoration-warning="state=='progress'"
+                                           decoration-success="state=='done'"
+                                           decoration-danger="state=='cancel'"/>
+                                    <field name="date_deadline"/>
+                                </tree>
+                            </field>
+                        </group>
+                    </group>
+                </page>
             </xpath>
 
         </field>
     </record>
+
+    <!-- Search View com Filtros Úteis -->
+    <record id="view_repair_order_filter_integration" model="ir.ui.view">
+        <field name="name">repair.order.select.integration</field>
+        <field name="model">repair.order</field>
+        <field name="inherit_id" ref="repair.view_repair_order_filter"/>
+        <field name="arch" type="xml">
+            <filter name="draft" position="after">
+                <separator/>
+                <filter name="with_production" 
+                        string="Com Produção Vinculada" 
+                        domain="[('production_count', '>', 0)]"
+                        icon="fa-industry"/>
+                <filter name="my_repairs" 
+                        string="Meus Reparos" 
+                        domain="[('operator_id.user_id', '=', uid)]"
+                        icon="fa-user"/>
+            </filter>
+        </field>
+    </record>
+
 </odoo>
