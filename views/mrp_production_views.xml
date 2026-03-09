@@ -1,19 +1,120 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <record id="view_mrp_production_form_inherit" model="ir.ui.view">
-        <field name="name">mrp.production.form.inherit.qc</field>
+    
+    <!-- Tree View com Badge de Reparo -->
+    <record id="view_mrp_production_tree_integration" model="ir.ui.view">
+        <field name="name">mrp.production.tree.integration</field>
+        <field name="model">mrp.production</field>
+        <field name="inherit_id" ref="mrp.mrp_production_tree_view"/>
+        <field name="arch" type="xml">
+            <field name="origin" position="after">
+                <field name="repair_order_id" 
+                       optional="show"
+                       widget="many2one_avatar"
+                       attrs="{'column_invisible': [('parent.show_repair_column', '=', False)]}"/>
+            </field>
+        </field>
+    </record>
+
+    <!-- Form View - Smart Button Bidirecional -->
+    <record id="view_mrp_production_form_integration" model="ir.ui.view">
+        <field name="name">mrp.production.form.integration</field>
         <field name="model">mrp.production</field>
         <field name="inherit_id" ref="mrp.mrp_production_form_view"/>
         <field name="arch" type="xml">
             
+            <!-- === BUTTON BOX: Smart Button para Reparo === -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_repair"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-wrench"
+                        attrs="{'invisible': [('repair_order_id', '=', False)]}"
+                        help="🔗 Ver Ordem de Reparo vinculada">
+                    <div class="o_stat_info">
+                        <span class="o_stat_text">Reparo</span>
+                    </div>
+                </button>
+            </xpath>
 
-            <!-- ✅ Campo de vínculo com Repair Order -->
-            <xpath expr="//group[@name='group_extra_info']" position="inside">
-                <field name="repair_order_id" 
-                       attrs="{'readonly': [('state', '!=', 'draft')]}"
-                       context="{'form_view_ref': 'repair.view_repair_order_form'}"/>
-            </xpath>           
+            <!-- === HEADER: Link para criar reparo se não houver === -->
+            <xpath expr="//header" position="inside">
+                <button name="%(repair.action_repair_order_tree)d"
+                        type="action"
+                        string="🔧 Criar Reparo"
+                        class="btn-secondary"
+                        attrs="{'invisible': [('repair_order_id', '!=', False), ('state', 'in', ['done', 'cancel'])]}"
+                        context="{'default_product_id': product_id, 'default_product_qty': product_qty, 'default_mrp_production_id': active_id}"
+                        help="Cria nova Ordem de Reparo vinculada a esta produção"/>
+            </xpath>
+
+            <!-- === SHEET: Grupo de Integração Repair === -->
+            <xpath expr="//sheet/group[1]" position="after">
+                <group string="🔗 Integração Repair" name="repair_integration_group" col="4"
+                       attrs="{'invisible': [('repair_order_id', '=', False)]}">
+                    <field name="repair_order_id" 
+                           options="{'no_create': True, 'no_open': False}"
+                           placeholder="Nenhum reparo vinculado"
+                           help="Reparo que originou esta produção. Clique para navegar."/>
+                    <button name="action_view_repair"
+                            type="object"
+                            string="Abrir Reparo ↗"
+                            class="btn-link"
+                            icon="fa-external-link"
+                            attrs="{'invisible': [('repair_order_id', '=', False)]}"/>
+                </group>
+            </xpath>
+
+            <!-- === NOTEBOOK: Aba de Informações do Reparo === -->
+            <xpath expr="//notebook" position="inside">
+                <page string="🔧 Informações do Reparo" name="repair_info_tab"
+                      attrs="{'invisible': [('repair_order_id', '=', False)]}">
+                    <group>
+                        <group>
+                            <field name="repair_order_id" string="Ordem de Reparo" readonly="1"/>
+                            <field name="repair_order_id.partner_id" string="Cliente" readonly="1"/>
+                            <field name="repair_order_id.schedule_date" string="Data do Reparo" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="repair_order_id.state" 
+                                   string="Status do Reparo" 
+                                   widget="badge"
+                                   decoration-info="repair_order_id.state=='draft'"
+                                   decoration-warning="repair_order_id.state=='under_repair'"
+                                   decoration-success="repair_order_id.state=='done'"
+                                   decoration-danger="repair_order_id.state=='cancel'"
+                                   readonly="1"/>
+                            <field name="repair_order_id.note" 
+                                   string="Observações do Reparo" 
+                                   readonly="1"
+                                   nolabel="1"
+                                   colspan="2"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
 
         </field>
     </record>
+
+    <!-- Search View com Filtros de Integração -->
+    <record id="view_mrp_production_filter_integration" model="ir.ui.view">
+        <field name="name">mrp.production.select.integration</field>
+        <field name="model">mrp.production</field>
+        <field name="inherit_id" ref="mrp.view_mrp_production_filter"/>
+        <field name="arch" type="xml">
+            <filter name="activities_today" position="after">
+                <separator/>
+                <filter name="from_repair" 
+                        string="Originadas de Reparo" 
+                        domain="[('repair_order_id', '!=', False)]"
+                        icon="fa-wrench"/>
+                <filter name="my_productions" 
+                        string="Minhas Produções" 
+                        domain="[('user_id', '=', uid)]"
+                        icon="fa-user"/>
+            </filter>
+        </field>
+    </record>
+
 </odoo>
