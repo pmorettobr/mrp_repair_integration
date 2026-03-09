@@ -1,2 +1,13 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_repair_order_user,repair.order.user,model_repair_order,base.group_user,1,1,1,1
+access_repair_order_manager,repair.order.manager,model_repair_order,mrp.group_mrp_manager,1,1,1,1
+
+access_mrp_production_user,mrp.production.user,model_mrp_production,base.group_user,1,1,1,1
+access_mrp_production_manager,mrp.production.manager,model_mrp_production,mrp.group_mrp_manager,1,1,1,1
+
+access_mrp_workorder_user,mrp.workorder.user,model_mrp_workorder,base.group_user,1,1,1,1
+access_mrp_workorder_manager,mrp.workorder.manager,model_mrp_workorder,mrp.group_mrp_manager,1,1,1,1
+
+# Wizard de Criação de Produção
+access_wizard_create_production_user,wizard.create.production.user,model_repair_create_production_wizard,base.group_user,1,1,1,0
+access_wizard_create_production_manager,wizard.create.production.manager,model_repair_create_production_wizard,mrp.group_mrp_manager,1,1,1,1
