@@ -1,43 +1,79 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     
-    <!-- ✅ 1. Form View: Operador na Work Order individual -->
-    <record id="view_workorder_form_operator" model="ir.ui.view">
-        <field name="name">mrp.workorder.form.operator</field>
+    <!-- Kanban/Tree: Badge de Operador -->
+    <record id="view_mrp_workorder_tree_integration" model="ir.ui.view">
+        <field name="name">mrp.workorder.tree.integration</field>
         <field name="model">mrp.workorder</field>
-        <field name="inherit_id" ref="mrp.mrp_production_workorder_form_view_inherit"/>
+        <field name="inherit_id" ref="mrp.mrp_production_workorder_tree_view"/>
         <field name="arch" type="xml">
+            <field name="user_id" position="after">
+                <field name="operator_id" 
+                       optional="show"
+                       widget="many2one_avatar"
+                       string="Operador"/>
+                <field name="operator_duration" 
+                       optional="show"
+                       widget="float_time"
+                       decoration-success="operator_duration > 0"
+                       string="Tempo Real"/>
+            </field>
+        </field>
+    </record>
 
-            <xpath expr="//sheet" position="inside">
-                
-                <group string="Operador" name="operator_group" col="4">
+    <!-- Form View: Grupo de Operador Organizado -->
+    <record id="view_mrp_workorder_form_integration" model="ir.ui.view">
+        <field name="name">mrp.workorder.form.integration</field>
+        <field name="model">mrp.workorder</field>
+        <field name="inherit_id" ref="mrp.mrp_production_workorder_form_view"/>
+        <field name="arch" type="xml">
+            
+            <!-- === SHEET: Grupo de Operador no topo === -->
+            <xpath expr="//sheet/group[1]" position="before">
+                <group string="👤 Operador & Tempo" name="operator_tracking_group" col="4">
                     <field name="operator_id" 
-                           options="{'no_create': True, 'no_open': True}"
-                           attrs="{'required': [('state', 'in', ['progress', 'ready'])]}"/>
-                    <field name="operator_start_date" readonly="1"/>
-                    <field name="operator_end_date" readonly="1"/>
+                           options="{'no_create': True, 'no_open': False}"
+                           help="Funcionário responsável por esta operação. Preencha antes de iniciar."/>
+                    <field name="operator_start_date" readonly="1" widget="datetime"/>
+                    <field name="operator_end_date" readonly="1" widget="datetime"/>
+                    <field name="operator_duration" 
+                           widget="float_time" 
+                           readonly="1"
+                           decoration-success="operator_duration > 0"
+                           help="⏱️ Tempo total gasto pelo operador nesta operação."/>
                 </group>
+            </xpath>
 
+            <!-- === FOOTER: Mensagem de ajuda contextual === -->
+            <xpath expr="//footer" position="before">
+                <div class="alert alert-info mb-0" 
+                     role="alert" 
+                     attrs="{'invisible': [('operator_id', '!=', False), ('state', 'in', ['confirmed', 'progress'])]}">
+                    <i class="fa fa-info-circle"/> 
+                    <strong>Dica:</strong> Defina o <b>Operador</b> acima antes de clicar em "Iniciar" para registrar o tempo real da operação.
+                </div>
             </xpath>
 
         </field>
     </record>
 
-    <!-- ✅ 2. Tree View: Operador na lista DENTRO da Production Order -->
-    <record id="view_workorder_tree_operator" model="ir.ui.view">
-        <field name="name">mrp.workorder.tree.operator</field>
+    <!-- Search View: Filtro "Minhas Operações" -->
+    <record id="view_mrp_workorder_filter_integration" model="ir.ui.view">
+        <field name="name">mrp.workorder.select.integration</field>
         <field name="model">mrp.workorder</field>
-        <!-- ✅ XML ID correto para Odoo 16 Community -->
-        <field name="inherit_id" ref="mrp.mrp_production_workorder_tree_editable_view"/>
+        <field name="inherit_id" ref="mrp.view_mrp_workorder_search"/>
         <field name="arch" type="xml">
-
-            <!-- ✅ Adicionar operador após o campo name -->
-            <xpath expr="//field[@name='name']" position="after">
-                <field name="operator_id" 
-                       options="{'no_create': True, 'no_open': True}"
-                       optional="hide"/>
-            </xpath>
-
+            <filter name="ready" position="after">
+                <separator/>
+                <filter name="my_workorders" 
+                        string="Minhas Operações" 
+                        domain="[('operator_id.user_id', '=', uid)]"
+                        icon="fa-user"/>
+                <filter name="from_repair" 
+                        string="Vinculadas a Reparo" 
+                        domain="[('production_id.repair_order_id', '!=', False)]"
+                        icon="fa-wrench"/>
+            </filter>
         </field>
     </record>
 
