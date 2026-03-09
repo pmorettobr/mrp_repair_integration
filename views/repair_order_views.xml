@@ -6,12 +6,12 @@
         <field name="inherit_id" ref="repair.view_repair_order_form"/>
         <field name="arch" type="xml">
 
-            <!-- ✅ company_id no mesmo grupo que product_id (para domínio) -->
+            <!-- ✅ 1. company_id invisível para domínio -->
             <xpath expr="//field[@name='product_id']/.." position="inside">
                 <field name="company_id" invisible="1"/>
             </xpath>
 
-            <!-- ✅ Smart Button: Ver Ordens de Produção vinculadas -->
+            <!-- ✅ 2. Smart Button: Ver Ordens de Produção vinculadas -->
             <xpath expr="//div[@name='button_box']" position="inside">
                 <button name="action_view_productions"
                         type="object"
@@ -24,12 +24,17 @@
                         <span class="o_stat_text">OPs</span>
                     </div>
                 </button>
-            </xpath>           
+            </xpath>
 
-                <!-- Grupo de Ordens de Produção Vinculadas -->
-                <group string="Ordens de Produção Vinculadas" name="production_link_group" colspan="4">
+            <!-- ✅ 3. Grupo de Ordens de Produção Vinculadas (CORRIGIDO) -->
+            <!-- O grupo precisa estar DENTRO de um xpath com posição definida -->
+            <xpath expr="//notebook" position="before">
+                <group string="Ordens de Produção Vinculadas" 
+                       name="production_link_group" 
+                       colspan="4"
+                       attrs="{'invisible': [('production_count', '=', 0)]}">
                     <field name="production_ids" nolabel="1" colspan="4">
-                        <tree create="0" delete="0">
+                        <tree create="0" delete="0" edit="0">
                             <field name="name"/>
                             <field name="product_id"/>
                             <field name="product_qty"/>
