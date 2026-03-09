@@ -18,15 +18,6 @@ class MrpWorkorder(models.Model):
     operator_start_date = fields.Datetime(string="Início Operação", copy=False)
     operator_end_date = fields.Datetime(string="Fim Operação", copy=False)
 
-    # ✅ Campos de QC
-    quality_approval_state = fields.Selection(
-        [('pending', 'Pendente'), ('approved', 'Aprovado'), ('rejected', 'Rejeitado')],
-        default='pending',
-        string="Status QC",
-        copy=False,
-        tracking=True
-    )
-    quality_notes = fields.Text(string="Observações QC", copy=False)
 
     # ✅ Exigir operador antes de iniciar
     def button_start(self):
