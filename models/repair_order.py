@@ -10,15 +10,6 @@ class RepairOrder(models.Model):
     )
     production_count = fields.Integer(string="Total de Produções", compute="_compute_production_count")
 
-    # Campos QC
-    quality_approval_state = fields.Selection(
-        [('pending', 'Pendente'), ('approved', 'Aprovado'), ('rejected', 'Rejeitado')],
-        default='pending', string="Status QC", copy=False, tracking=True
-    )
-    quality_approved_by = fields.Many2one('res.users', string="Aprovado por", copy=False)
-    quality_approval_date = fields.Datetime(string="Data Aprovação", copy=False)
-    quality_notes = fields.Text(string="Observações QC", copy=False)
-
     @api.depends('production_ids')
     def _compute_production_count(self):
         for rec in self:
@@ -36,33 +27,3 @@ class RepairOrder(models.Model):
         else:
             action = {'type': 'ir.actions.act_window_close'}
         return action
-
-    # ✅ Método: Aprovar QC
-    def action_approve_quality(self):
-        for rec in self:
-            rec.write({
-                'quality_approval_state': 'approved',
-                'quality_approved_by': self.env.user.id,
-                'quality_approval_date': fields.Datetime.now()
-            })
-        return True
-
-    # ✅ Método: Rejeitar QC
-    def action_reject_quality(self):
-        for rec in self:
-            rec.write({
-                'quality_approval_state': 'rejected',
-                'quality_approved_by': self.env.user.id,
-                'quality_approval_date': fields.Datetime.now()
-            })
-        return True
-
-    # ✅ Bloquear finalização sem QC aprovado
-    def action_repair_end(self):
-        for repair in self:
-            if repair.quality_approval_state != 'approved':
-                raise UserError(
-                    "Não é possível finalizar o reparo.\n\n"
-                    "O Controle de Qualidade precisa estar APROVADO."
-                )
-        return super().action_repair_end()
