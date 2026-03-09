@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    
+    <!-- ✅ 1. Form View: Operador na Work Order individual -->
+    <record id="view_workorder_form_operator" model="ir.ui.view">
+        <field name="name">mrp.workorder.form.operator</field>
+        <field name="model">mrp.workorder</field>
+        <field name="inherit_id" ref="mrp.mrp_production_workorder_form_view_inherit"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//sheet" position="inside">
+                
+                <group string="Operador" name="operator_group" col="4">
+                    <field name="operator_id" 
+                           options="{'no_create': True, 'no_open': True}"
+                           attrs="{'required': [('state', 'in', ['progress', 'ready'])]}"/>
+                    <field name="operator_start_date" readonly="1"/>
+                    <field name="operator_end_date" readonly="1"/>
+                </group>
+
+                <group string="Controle de Qualidade" name="qc_group" col="4">
+                    <field name="quality_approval_state" widget="badge"/>
+                    <field name="quality_notes" placeholder="Observações do QC..." colspan="4"/>
+                </group>
+
+            </xpath>
+
+        </field>
+    </record>
+
+    <!-- ✅ 2. Tree View: Operador na lista DENTRO da Production Order -->
+    <record id="view_workorder_tree_operator" model="ir.ui.view">
+        <field name="name">mrp.workorder.tree.operator</field>
+        <field name="model">mrp.workorder</field>
+        <!-- ✅ XML ID correto para Odoo 16 Community -->
+        <field name="inherit_id" ref="mrp.mrp_production_workorder_tree_editable_view"/>
+        <field name="arch" type="xml">
+
+            <!-- ✅ Adicionar operador após o campo name -->
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="operator_id" 
+                       options="{'no_create': True, 'no_open': True}"
+                       optional="hide"/>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

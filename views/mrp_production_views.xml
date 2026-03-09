@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_mrp_production_form_inherit" model="ir.ui.view">
+        <field name="name">mrp.production.form.inherit.qc</field>
+        <field name="model">mrp.production</field>
+        <field name="inherit_id" ref="mrp.mrp_production_form_view"/>
+        <field name="arch" type="xml">
+
+            <!-- ✅ Botões de QC no header (somente se houver vínculo com repair) -->
+            <xpath expr="//header" position="inside">
+                <button name="action_approve_quality"
+                        type="object"
+                        string="Aprovar QC"
+                        class="btn-primary"
+                        attrs="{'invisible': ['|', 
+                            ('repair_order_id', '=', False), 
+                            ('quality_approval_state', '!=', 'pending')]}"/>
+                <button name="action_reject_quality"
+                        type="object"
+                        string="Rejeitar QC"
+                        class="btn-danger"
+                        attrs="{'invisible': ['|', 
+                            ('repair_order_id', '=', False), 
+                            ('quality_approval_state', '!=', 'pending')]}"/>
+            </xpath>
+
+            <!-- ✅ Campo de vínculo com Repair Order -->
+            <xpath expr="//group[@name='group_extra_info']" position="inside">
+                <field name="repair_order_id" 
+                       attrs="{'readonly': [('state', '!=', 'draft')]}"
+                       context="{'form_view_ref': 'repair.view_repair_order_form'}"/>
+            </xpath>
+
+            <!-- ✅ Grupo de QC antes do notebook -->
+            <xpath expr="//notebook" position="before">
+                <group string="Controle de Qualidade" name="quality_group" col="4"
+                       attrs="{'invisible': [('repair_order_id', '=', False)]}">
+                    <field name="quality_approval_state" widget="badge"/>
+                    <field name="quality_approved_by"/>
+                    <field name="quality_approval_date"/>
+                    <field name="quality_notes" placeholder="Observações do QC..." colspan="4"/>
+                </group>
+            </xpath>
+
+        </field>
+    </record>
+</odoo>
